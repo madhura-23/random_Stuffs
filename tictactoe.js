@@ -1,4 +1,5 @@
 const prompt = require('prompt-sync')();
+console.log("Welcome to Tic Tac Toe!");
 
 
 let board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
