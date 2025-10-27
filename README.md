@@ -1,86 +1,118 @@
-<h1 align="center">🎮 Tic Tac Toe Console Game</h1>
+# SYNOPSIS
+A sync prompt for node. very simple. no C++ bindings and no bash scripts.
 
-<p align="center">
-🕹️ A fun little <b>JavaScript Tic Tac Toe</b> you can play right in your terminal!<br>
-No browser. No graphics. Just pure logic, emojis, and goat-level fun 🐐✨
-</p>
+Works on Linux, OS X and Windows.
 
----
+# BASIC MODE
+```js
 
-## 🧩 About the Project
-This is a **console-based Tic Tac Toe game** made with **Node.js**.  
-Two players take turns making moves on a 3x3 grid — the first to align three symbols wins!
+var prompt = require('prompt-sync')();
+//
+// get input from the user.
+//
+var n = prompt('How many more times? ');
+```
+# WITH HISTORY
 
-💬 You’ll see a live board update and prompts after every move.  
-If the board fills up, it declares a draw automatically.
+History is an optional extra, to use simply install the history plugin. 
 
----
+```sh
+npm install --save prompt-sync-history
+```
 
-## 🕹️ Demo
-Here’s what it looks like in your terminal 👇
+```js
+var prompt = require('prompt-sync')({
+  history: require('prompt-sync-history')() //open history file
+});
+//get some user input
+var input = prompt()
+prompt.history.save() //save history back to file
+```
 
- 🍇 | 🐐 |
-    ---------
- 🍇 | 🐐 | 🐐
-    ---------
- 🍇 |   |
+See the [prompt-sync-history](http://npm.im/prompt-sync-history) module
+for options, or fork it for customized behaviour. 
 
-Player 🍇 wins!
+# API
 
+## `require('prompt-sync')(config) => prompt` 
 
----
+Returns an instance of the `prompt` function.
+Takes `config` option with the following possible properties
 
-## ⚙️ Features
-✅ Play directly in your **Node.js terminal**  
-✅ Uses cute emojis 🐐 🍇 instead of boring X and O  
-✅ Detects wins and draws automatically  
-✅ Input validation for valid moves  
-✅ Simple, lightweight, and beginner-friendly  
+`sigint`: Default is `false`. A ^C may be pressed during the input process to abort the text entry. If sigint it `false`, prompt returns `null`. If sigint is `true` the ^C will be handled in the traditional way: as a SIGINT signal causing process to exit with code 130.
 
----
+`eot`: Default is `false`. A ^D pressed as the first character of an input line causes prompt-sync to echo `exit` and exit the process with code 0.
 
-## 🛠️ Tech Stack
-| Tool | Purpose |
-|------|----------|
-| 🟩 Node.js | Game logic and runtime |
-| ⌨️ prompt-sync | For taking user input |
+`autocomplete`: A completer function that will be called when user enters TAB to allow for autocomplete. It takes a string as an argument an returns an array of strings that are possible matches for completion. An empty array is returned if there are no matches.
 
----
+`history`: Takes an object that supplies a "history interface", see [prompt-sync-history](http://npm.im/prompt-sync-history) for an example.
 
-## 🚀 How to Run the Game
+## `prompt(ask, value, opts)`
 
-1️⃣ Clone this repository  
-```bash
-git clone https://github.com/madhura-23/tictactoe-console.git
+`ask` is the label of the prompt, `value` is the default value
+in absence of a response. 
 
+The `opts` argument can also be in the first or second parameter position.
 
-2️⃣ Move into the folder
+Opts can have the following properties
 
-cd tictactoe-console
+`echo`: Default is `'*'`. If set the password will be masked with the specified character. For hidden input, set echo to `''` (or use `prompt.hide`).
 
+`autocomplete`: Overrides the instance `autocomplete` function to allow for custom 
+autocompletion of a particular prompt.
 
-3️⃣ Install dependencies
+`value`: Same as the `value` parameter, the default value for the prompt. If `opts`
+is in the third position, this property will *not* overwrite the `value` parameter.
 
-npm install prompt-sync
+`ask`: Sames as the `value` parameter. The prompt label. If `opts` is not in the first position, the `ask` parameter will *not* be overridden by this property.
+
+## `prompt.hide(ask)`
+
+Convenience method for creating a standard hidden password prompt, 
+this is the same as `prompt(ask, {echo: ''})`
 
 
-4️⃣ Run the game
+# LINE EDITING
+Line editing is enabled in the non-hidden mode. (use up/down arrows for history and backspace and left/right arrows for editing)
 
-node tictactoe.js
+History is not set when using hidden mode.
 
+# EXAMPLES
 
-🎉 Enjoy your match!
+```js
+  //basic:
+  console.log(require('prompt-sync')()('tell me something about yourself: '))
 
-💡 Future Upgrades
+  var prompt = require('prompt-sync')({
+    history: require('prompt-sync-history')(),
+    autocomplete: complete(['hello1234', 'he', 'hello', 'hello12', 'hello123456']),
+    sigint: false
+  });
 
-🌟 Add AI opponent (play vs computer 🤖)
-🌟 Add score tracking & replay feature
-🌟 Build a colorful web version with animations
+  var value = 'frank';
+  var name = prompt('enter name: ', value);
+  console.log('enter echo * password');
+  var pw = prompt({echo: '*'});
+  var pwb = prompt('enter hidden password (or don\'t): ', {echo: '', value: '*pwb default*'})
+  var pwc = prompt.hide('enter another hidden password: ')
+  var autocompleteTest = prompt('custom autocomplete: ', {
+    autocomplete: complete(['bye1234', 'by', 'bye12', 'bye123456'])
+  });
 
-🧑‍💻 Author
+  prompt.history.save();
 
-Made with 💛 by Madhura-23
+  console.log('\nName: %s\nPassword *: %s\nHidden password: %s\nAnother Hidden password: %s', name, pw, pwb, pwc);
+  console.log('autocomplete2: ', autocompleteTest);
 
-If you liked this project, give it a ⭐ on GitHub — it helps more than you think! 🌈
-
-<p align="center"> <img src="https://img.shields.io/badge/Language-JavaScript-yellow?style=for-the-badge"/> <img src="https://img.shields.io/badge/Console%20Game-Fun-blueviolet?style=for-the-badge"/> <img src="https://img.shields.io/badge/Made%20With-❤️-red?style=for-the-badge"/> </p> ```
+  function complete(commands) {
+    return function (str) {
+      var i;
+      var ret = [];
+      for (i=0; i< commands.length; i++) {
+        if (commands[i].indexOf(str) == 0)
+          ret.push(commands[i]);
+      }
+      return ret;
+    };
+  };
+```
